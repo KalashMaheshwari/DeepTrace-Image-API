@@ -8,10 +8,12 @@ DeepTrace AI is a Multimodal Forensics & Deepfake Detection Platform designed to
 - **Forensic Metadata Analysis**: Extracts EXIF metadata to identify signatures of known editing software and AI generators (e.g., Midjourney, DALL-E, Stable Diffusion, Photoshop).
 - **Dynamic Ensemble Risk Engine**: Applies heuristic risk penalties for common AI generation artifacts, such as missing EXIF headers and exact square aspect ratios (e.g., 512x512, 1024x1024).
 - **Visual Explainability**: Generates an edge-enhanced heatmap overlay of the image, helping to highlight structural inconsistencies or manipulated candidate clusters.
+- **Frontend Dashboard**: A premium, responsive glassmorphic UI for seamless drag-and-drop testing and visual result analysis.
 
 ## Tech Stack
 
 - **Backend**: FastAPI (Python)
+- **Frontend**: Vanilla HTML/CSS/JS (Glassmorphic Dark Theme)
 - **Machine Learning**: PyTorch, Transformers (HuggingFace)
 - **Image Processing**: Pillow (PIL)
 
@@ -38,6 +40,9 @@ DeepTrace AI is a Multimodal Forensics & Deepfake Detection Platform designed to
    ```bash
    uvicorn main:app --reload
    ```
+
+5. **Open the Dashboard**:
+   Simply navigate to the `frontend` directory in your file explorer and double-click `index.html` to open it in your browser. (The backend is configured with open CORS, so no dev server is required for the frontend!)
 
 ## API Endpoints
 
