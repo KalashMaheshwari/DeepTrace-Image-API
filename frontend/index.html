@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepTrace AI - Deepfake Detection</title>
+    <meta name="description" content="Multimodal Forensics & Deepfake Detection Platform">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="glass-header">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h1>DeepTrace AI</h1>
+            </div>
+            <div class="status-badge">
+                <span class="pulse-dot"></span> API Online
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="upload-section glass-panel">
+                <div class="section-header">
+                    <h2>Image Forensics</h2>
+                    <p>Upload an image to detect synthetic manipulation and AI generation.</p>
+                </div>
+                
+                <div class="dropzone" id="dropzone">
+                    <input type="file" id="file-input" accept="image/*" hidden>
+                    <div class="upload-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    </div>
+                    <h3>Drag & Drop or <span class="text-accent">Click to Browse</span></h3>
+                    <p class="file-hint">Supports JPEG, PNG, WEBP</p>
+                    
+                    <div id="image-preview-container" class="hidden">
+                        <img id="image-preview" src="" alt="Preview">
+                        <button id="remove-image-btn" class="icon-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button id="analyze-btn" class="primary-btn" disabled>
+                    <span class="btn-text">Analyze Media</span>
+                    <div class="loader hidden"></div>
+                </button>
+                <div id="error-message" class="error-message hidden"></div>
+            </div>
+
+            <div id="results-section" class="results-section hidden">
+                <div class="verdict-panel glass-panel" id="verdict-panel">
+                    <h2 class="section-title">Verdict</h2>
+                    <div class="verdict-display">
+                        <div class="verdict-text-group">
+                            <h3 id="verdict-text">Authentic</h3>
+                            <p id="verdict-subtext">No significant manipulation detected.</p>
+                        </div>
+                        <div class="confidence-circle">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" id="confidence-circle-path" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div class="confidence-text">
+                                <span id="confidence-score">98</span><span class="percent">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-grid">
+                    <div class="heatmap-panel glass-panel">
+                        <h2 class="section-title">Visual Explainability</h2>
+                        <div class="heatmap-container">
+                            <img id="heatmap-image" src="" alt="Forensic Heatmap">
+                            <div class="heatmap-overlay-label">Structural Inconsistencies & Edges</div>
+                        </div>
+                    </div>
+
+                    <div class="data-panels">
+                        <div class="metadata-panel glass-panel">
+                            <h2 class="section-title">Forensic Metadata</h2>
+                            <ul class="metadata-list" id="metadata-list">
+                                <!-- Populated via JS -->
+                            </ul>
+                        </div>
+                        
+                        <div class="breakdown-panel glass-panel">
+                            <h2 class="section-title">Analysis Breakdown</h2>
+                            <div class="score-bars">
+                                <div class="score-row">
+                                    <div class="score-label">Raw Neural Probability</div>
+                                    <div class="score-value" id="raw-prob">0%</div>
+                                </div>
+                                <div class="score-row">
+                                    <div class="score-label">Heuristic Risk Penalty</div>
+                                    <div class="score-value text-warning" id="heuristic-penalty">+0%</div>
+                                </div>
+                                <div class="score-row threshold-row">
+                                    <div class="score-label">Detection Threshold</div>
+                                    <div class="score-value text-muted" id="threshold-val">30%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
