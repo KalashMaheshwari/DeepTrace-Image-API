@@ -1,20 +1,21 @@
 import modal
-from fastapi import FastAPI
-# Import your existing FastAPI app exactly as it is!
-from app import app as fastapi_app
 
 # 1. Define the cloud environment for Modal
 # We ask Modal for a Python 3.10 environment and install our requirements
-image = modal.Image.debian_slim(python_version="3.10").pip_install(
-    "fastapi",
-    "uvicorn",
-    "torch",
-    "torchvision",
-    "pillow",
-    "python-multipart",
-    "transformers",
-    "gradio",
-    "spaces"
+image = (
+    modal.Image.debian_slim(python_version="3.10")
+    .pip_install(
+        "fastapi",
+        "uvicorn",
+        "torch",
+        "torchvision",
+        "pillow",
+        "python-multipart",
+        "transformers",
+        "gradio",
+        "spaces"
+    )
+    .add_local_file("app.py", remote_path="/root/app.py")
 )
 
 # 2. Create a Modal App
@@ -25,4 +26,6 @@ app = modal.App("DeepTrace-Image-API", image=image)
 @app.function(gpu="T4")
 @modal.asgi_app()
 def serve():
+    # Import inside the function so Modal mounts it into the cloud!
+    from app import app as fastapi_app
     return fastapi_app
