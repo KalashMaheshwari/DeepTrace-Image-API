@@ -6,6 +6,7 @@ from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import torch
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 import PIL.ExifTags
+import spaces
 
 app = FastAPI(
     title="DeepTrace AI Engine",
@@ -164,6 +165,7 @@ async def analyze_image(file: UploadFile = File(...)):
 # This allows the FastAPI app to run inside a 100% free Hugging Face Gradio Space!
 import gradio as gr
 
+@spaces.GPU
 def dummy_ui():
     return "DeepTrace API is running! Access the frontend to use the inference engine."
 
