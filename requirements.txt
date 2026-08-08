@@ -7,3 +7,4 @@ python-multipart
 gradio
 transformers
 spaces
+modal

@@ -31,7 +31,7 @@ export default function App() {
       const isVideo = targetFile.type.startsWith('video/');
       const endpoint = isVideo 
           ? (import.meta.env.VITE_VIDEO_API || 'http://localhost:8001/api/v1/analyze-video')
-          : (import.meta.env.VITE_IMAGE_API || 'http://localhost:8000/api/v1/analyze');
+          : (import.meta.env.VITE_IMAGE_API || 'https://kalashviyani0108--deeptrace-image-api-serve.modal.run/api/v1/analyze');
 
       const response = await fetch(endpoint, {
         method: 'POST',
