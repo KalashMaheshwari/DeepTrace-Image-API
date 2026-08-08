@@ -2,15 +2,15 @@ import io
 import base64
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image, ImageOps, ImageEnhance, ImageFilter
-import torch
-from transformers import AutoImageProcessor, SiglipForImageClassification
+from PIL import Image
 import PIL.ExifTags
+
+from aide_wrapper import AIDEInferenceEngine
 
 app = FastAPI(
     title="DeepTrace AI Engine",
-    description="Multimodal Forensics & Deepfake Detection Platform",
-    version="2.1"
+    description="Explainable Media Forensics Platform powered by AIDE (ICLR 2025)",
+    version="4.0"
 )
 
 app.add_middleware(
@@ -21,15 +21,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load SigLIP-based Deepfake Detector Model
-MODEL_NAME = "prithivMLmods/deepfake-detector-model-v1"
-print(f"Loading DeepTrace AI SigLIP Neural Engine ({MODEL_NAME})...")
-
-processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
-model = SiglipForImageClassification.from_pretrained(MODEL_NAME)
-model.eval()
-print("DeepTrace AI Engine Ready!")
-
+# Initialize AIDE Model Engine
+aide_engine = AIDEInferenceEngine(checkpoint_path="weights/aide_checkpoint.pth")
 
 def extract_metadata(image: Image.Image) -> dict:
     """Extracts EXIF metadata and inspects for synthetic/editing signatures."""
@@ -60,30 +53,18 @@ def extract_metadata(image: Image.Image) -> dict:
         "raw_exif_summary": dict(list(exif_data.items())[:5]) if exif_data else "No EXIF headers found"
     }
 
-
-def generate_heatmap_overlay(image: Image.Image) -> str:
-    """Generates a visual forensic heatmap highlighting manipulated region candidate clusters."""
-    gray = image.convert("L")
-    edges = gray.filter(ImageFilter.FIND_EDGES)
-    enhanced = ImageEnhance.Contrast(edges).enhance(2.5)
-    heatmap_colored = ImageOps.colorize(enhanced, black="blue", white="red", mid="yellow")
-    blended = Image.blend(image.convert("RGB"), heatmap_colored, alpha=0.45)
-    
-    buffered = io.BytesIO()
-    blended.save(buffered, format="JPEG")
-    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    return f"data:image/jpeg;base64,{img_str}"
-
-
 @app.get("/")
 def health_check():
-    return {"system": "DeepTrace AI Engine", "status": "operational", "model": MODEL_NAME}
-
+    return {
+        "system": "DeepTrace AI Engine",
+        "model_architecture": "AIDE (ICLR 2025)",
+        "status": "operational"
+    }
 
 @app.post("/api/v1/analyze")
 async def analyze_image(file: UploadFile = File(...)):
     if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File uploaded must be an image.")
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image.")
 
     try:
         contents = await file.read()
@@ -92,64 +73,47 @@ async def analyze_image(file: UploadFile = File(...)):
         # 1. Metadata Forensics
         metadata_analysis = extract_metadata(image)
 
-        # 2. Model Inference
-        inputs = processor(images=image, return_tensors="pt")
-        with torch.no_grad():
-            outputs = model(**inputs)
-            logits = outputs.logits
-            probabilities = torch.softmax(logits, dim=-1)[0]
-
-        # Explicit Label Handling (Solves inverted label bugs)
-        labels = model.config.id2label
-        probs_dict = {labels[i].lower(): round(probabilities[i].item() * 100, 2) for i in range(len(labels))}
-
-        # Find synthetic score matching any common fake label variant ('fake', 'deepfake', 'synthetic')
-        fake_score = 0.0
-        for key, val in probs_dict.items():
-            if any(k in key for k in ["fake", "deepfake", "synthetic"]):
-                fake_score = val
-                break
-
-        # 3. Dynamic Ensemble Risk Engine
-        heuristic_penalty = 0.0
+        # 2. AIDE Dual-Branch Neural Inference
+        raw_output = aide_engine.predict(image)
         
-        # EXIF Missing Penalty (Very common in synthetic generations)
+        raw_fake_probability = 50.0
+        if isinstance(raw_output, list) and len(raw_output) > 0 and len(raw_output[0]) == 2:
+            import torch
+            logits = torch.tensor(raw_output[0])
+            prob = torch.softmax(logits, dim=-1)[1].item()
+            raw_fake_probability = round(prob * 100.0, 2)
+        elif isinstance(raw_output, float) or isinstance(raw_output, int):
+            raw_fake_probability = float(raw_output)
+
+        # 3. Dynamic Ensemble Penalties
+        heuristic_penalty = 0.0
         if not metadata_analysis["has_exif_headers"]:
             heuristic_penalty += 15.0
-
-        # AI Generator Aspect Ratio / Resolution Penalty
+        
         w, h = image.width, image.height
-        if w == h or metadata_analysis["dimensions"] in ["1024x1024", "512x512", "447x447", "1024x1024"]:
+        if w == h or metadata_analysis["dimensions"] in ["1024x1024", "512x512", "447x447"]:
             heuristic_penalty += 10.0
 
-        # Calculate Final Composite Synthetic Risk
-        composite_synthetic_risk = min(100.0, round(fake_score + heuristic_penalty, 2))
-
-        # CALIBRATED THRESHOLD: 30% or higher is flagged as synthetic
+        # Composite Risk Calculation
+        composite_synthetic_risk = min(100.0, round(raw_fake_probability + heuristic_penalty, 2))
+        
         SYNTHETIC_THRESHOLD = 30.0
         is_synthetic = composite_synthetic_risk >= SYNTHETIC_THRESHOLD
 
-        # 4. Generate Explainability Heatmap Overlay
-        heatmap_b64 = generate_heatmap_overlay(image)
-
         return {
-            "app_name": "DeepTrace AI",
+            "app_name": "DeepTrace AI Premium",
             "filename": file.filename,
             "verdict": "MANIPULATED / SYNTHETIC" if is_synthetic else "AUTHENTIC MEDIA",
-            "confidence_score": composite_synthetic_risk if is_synthetic else round(100.0 - composite_synthetic_risk, 2),
+            "confidence_score": composite_synthetic_risk,
             "is_synthetic": is_synthetic,
             "analysis_breakdown": {
                 "neural_model_probabilities": {
-                    "raw_fake_probability": f"{fake_score}%",
+                    "aide_raw_fake_probability": f"{raw_fake_probability}%",
                     "heuristic_risk_penalty": f"+{heuristic_penalty}%",
                     "final_composite_synthetic_risk": f"{composite_synthetic_risk}%",
-                    "threshold_applied": f"{SYNTHETIC_THRESHOLD}%",
-                    "all_labels": probs_dict
+                    "threshold_applied": f"{SYNTHETIC_THRESHOLD}%"
                 },
                 "forensic_metadata": metadata_analysis
-            },
-            "visual_explainability": {
-                "heatmap_overlay_base64": heatmap_b64
             }
         }
 
