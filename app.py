@@ -6,6 +6,7 @@ from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import torch
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 import PIL.ExifTags
+import spaces
 
 app = FastAPI(
     title="DeepTrace AI Engine",
@@ -29,6 +30,15 @@ processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
 model = AutoModelForImageClassification.from_pretrained(MODEL_NAME)
 model.eval()
 print("DeepTrace AI Engine Ready!")
+
+@spaces.GPU
+def run_neural_inference(image):
+    inputs = processor(images=image, return_tensors="pt")
+    with torch.no_grad():
+        outputs = model(**inputs)
+        logits = outputs.logits
+        probabilities = torch.softmax(logits, dim=-1)[0]
+    return probabilities
 
 
 def extract_metadata(image: Image.Image) -> dict:
@@ -92,12 +102,8 @@ async def analyze_image(file: UploadFile = File(...)):
         # 1. Metadata Forensics
         metadata_analysis = extract_metadata(image)
 
-        # 2. Model Inference
-        inputs = processor(images=image, return_tensors="pt")
-        with torch.no_grad():
-            outputs = model(**inputs)
-            logits = outputs.logits
-            probabilities = torch.softmax(logits, dim=-1)[0]
+        # 2. Model Inference via ZeroGPU
+        probabilities = run_neural_inference(image)
 
         # Explicit Label Handling (Solves inverted label bugs)
         labels = model.config.id2label
