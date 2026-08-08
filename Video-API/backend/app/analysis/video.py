@@ -2,8 +2,8 @@ import io
 import os
 import tempfile
 
-import cv2
-import numpy as np
+import cv2  # type: ignore
+import numpy as np  # type: ignore
 import torch
 
 from fastapi import APIRouter, File, UploadFile, HTTPException

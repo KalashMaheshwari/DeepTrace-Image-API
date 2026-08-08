@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./Video-API/backend",
+        "./Image-API/backend"
+    ]
+}

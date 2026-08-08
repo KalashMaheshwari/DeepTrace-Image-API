@@ -29,9 +29,11 @@ export default function App() {
 
     try {
       const isVideo = targetFile.type.startsWith('video/');
-      const endpoint = isVideo 
-          ? (import.meta.env.VITE_VIDEO_API || 'http://localhost:8001/api/v1/analyze-video')
-          : (import.meta.env.VITE_IMAGE_API || 'https://kalashviyani0108--deeptrace-image-api-serve.modal.run/api/v1/analyze');
+      const endpoint = isVideo ? import.meta.env.VITE_VIDEO_API : import.meta.env.VITE_IMAGE_API;
+
+      if (!endpoint) {
+        throw new Error(`API URL for ${isVideo ? 'video' : 'image'} analysis is not configured in .env file.`);
+      }
 
       const response = await fetch(endpoint, {
         method: 'POST',
