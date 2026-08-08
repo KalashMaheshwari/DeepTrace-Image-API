@@ -1,127 +1,122 @@
-import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Shield, ChevronRight, Loader2 } from 'lucide-react';
-import Dropzone from './components/Dropzone';
-import ResultsDashboard from './components/ResultsDashboard';
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from './assets/vite.svg'
+import heroImg from './assets/hero.png'
+import './App.css'
 
-export default function App() {
-  const [theme, setTheme] = useState('dark');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [resultData, setResultData] = useState(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
-
-  const analyzeImage = async (fileToAnalyze) => {
-    const targetFile = fileToAnalyze || (selectedFile && selectedFile.file);
-    if (!targetFile) return;
-
-    setIsAnalyzing(true);
-    setError('');
-    setResultData(null);
-
-    const formData = new FormData();
-    formData.append('file', targetFile);
-
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || 'Analysis failed. Is the backend running?');
-      }
-
-      const data = await response.json();
-      setResultData(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleFileSelect = (file, previewUrl) => {
-    setSelectedFile({ file, previewUrl });
-    setResultData(null);
-    setError('');
-    // Automatically trigger analysis on new file select
-    analyzeImage(file);
-  };
-
-  const handleRemoveFile = () => {
-    setSelectedFile(null);
-    setResultData(null);
-    setError('');
-  };
+function App() {
+  const [count, setCount] = useState(0)
 
   return (
-    <div className="app-container">
-      {/* SaaS Top Navigation */}
-      <nav className="top-nav">
-        <div className="nav-left">
-          <div className="nav-logo-icon">
-            <Shield size={20} color="var(--text-primary)" />
-          </div>
-          <div className="breadcrumb">
-            <span>Nexus</span>
-            <ChevronRight size={14} className="breadcrumb-separator" />
-            <span className="breadcrumb-active">DeepTrace Console</span>
-          </div>
+    <>
+      <section id="center">
+        <div className="hero">
+          <img src={heroImg} className="base" width="170" height="179" alt="" />
+          <img src={reactLogo} className="framework" alt="React logo" />
+          <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
-        <div className="nav-right">
-          <div className="nav-status">
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success-text)' }}></span>
-            API Operational
-          </div>
-          <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle Theme">
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
+        <div>
+          <h1>Get started</h1>
+          <p>
+            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+          </p>
         </div>
-      </nav>
+        <button
+          type="button"
+          className="counter"
+          onClick={() => setCount((count) => count + 1)}
+        >
+          Count is {count}
+        </button>
+      </section>
 
-      {/* Main Workspace */}
-      <main className="workspace">
-        <header className="page-header">
-          <h1>Neural Inference Engine</h1>
-          <p>Upload a media file to run AIDE multimodal forensics analysis.</p>
-        </header>
+      <div className="ticks"></div>
 
-        <section className="saas-panel dropzone-container">
-          <Dropzone 
-            onFileSelect={handleFileSelect} 
-            selectedFile={selectedFile}
-            onRemoveFile={handleRemoveFile}
-          />
-          
-          <div className="btn-container">
-            <button 
-              className="btn btn-primary" 
-              disabled={!selectedFile || isAnalyzing}
-              onClick={() => analyzeImage()}
-            >
-              {isAnalyzing ? (
-                <><Loader2 size={16} className="spinner" /> Processing...</>
-              ) : (
-                <>Run Analysis</>
-              )}
-            </button>
-          </div>
-          {error && (
-            <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color)', background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: '0.9rem' }}>
-              {error}
-            </div>
-          )}
-        </section>
+      <section id="next-steps">
+        <div id="docs">
+          <svg className="icon" role="presentation" aria-hidden="true">
+            <use href="/icons.svg#documentation-icon"></use>
+          </svg>
+          <h2>Documentation</h2>
+          <p>Your questions, answered</p>
+          <ul>
+            <li>
+              <a href="https://vite.dev/" target="_blank">
+                <img className="logo" src={viteLogo} alt="" />
+                Explore Vite
+              </a>
+            </li>
+            <li>
+              <a href="https://react.dev/" target="_blank">
+                <img className="button-icon" src={reactLogo} alt="" />
+                Learn more
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div id="social">
+          <svg className="icon" role="presentation" aria-hidden="true">
+            <use href="/icons.svg#social-icon"></use>
+          </svg>
+          <h2>Connect with us</h2>
+          <p>Join the Vite community</p>
+          <ul>
+            <li>
+              <a href="https://github.com/vitejs/vite" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#github-icon"></use>
+                </svg>
+                GitHub
+              </a>
+            </li>
+            <li>
+              <a href="https://chat.vite.dev/" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#discord-icon"></use>
+                </svg>
+                Discord
+              </a>
+            </li>
+            <li>
+              <a href="https://x.com/vite_js" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#x-icon"></use>
+                </svg>
+                X.com
+              </a>
+            </li>
+            <li>
+              <a href="https://bsky.app/profile/vite.dev" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#bluesky-icon"></use>
+                </svg>
+                Bluesky
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
 
-        {resultData && <ResultsDashboard resultData={resultData} />}
-      </main>
-    </div>
-  );
+      <div className="ticks"></div>
+      <section id="spacer"></section>
+    </>
+  )
 }
+
+export default App
