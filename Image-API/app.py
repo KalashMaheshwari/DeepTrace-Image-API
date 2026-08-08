@@ -111,7 +111,7 @@ async def analyze_image(file: UploadFile = File(...)):
         # Find synthetic score matching any common fake label variant ('fake', 'deepfake', 'synthetic')
         fake_score = 0.0
         for key, val in probs_dict.items():
-            if any(k in key for k in ["fake", "deepfake", "synthetic"]):
+            if key == "m" or any(k in key for k in ["fake", "deepfake", "synthetic"]):
                 fake_score = val
                 break
 

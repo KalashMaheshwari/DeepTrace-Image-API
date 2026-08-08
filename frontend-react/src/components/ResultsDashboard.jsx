@@ -32,7 +32,9 @@ export default function ResultsDashboard({ resultData }) {
         <div className="score-section" style={{ marginTop: '1rem' }}>
           <div className="score-header">
             <div>
-              <div className="score-title" style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>Likelihood of Manipulation</div>
+              <div className="score-title" style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                {isSynthetic ? "Likelihood of Manipulation" : "Confidence of Authenticity"}
+              </div>
             </div>
             <div className="score-value">
               {score}%
