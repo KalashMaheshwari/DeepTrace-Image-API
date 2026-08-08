@@ -6,4 +6,3 @@ pillow
 python-multipart
 gradio
 transformers
-spaces

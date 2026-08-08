@@ -6,7 +6,6 @@ from PIL import Image, ImageOps, ImageEnhance, ImageFilter
 import torch
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 import PIL.ExifTags
-import spaces
 
 app = FastAPI(
     title="DeepTrace AI Engine",
@@ -31,7 +30,6 @@ model = AutoModelForImageClassification.from_pretrained(MODEL_NAME)
 model.eval()
 print("DeepTrace AI Engine Ready!")
 
-@spaces.GPU
 def run_neural_inference(image):
     inputs = processor(images=image, return_tensors="pt")
     with torch.no_grad():
