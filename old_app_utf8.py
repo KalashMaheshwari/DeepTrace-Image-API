@@ -1,4 +1,4 @@
-import io
+﻿import io
 import base64
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,9 +45,9 @@ model.eval()
 
 # Startup Label Validation
 logger.info(f"Model Labels: {model.config.id2label}")
-expected_keywords = ["fake", "real", "synthetic", "authentic", "manipulated", "deepfake", "m", "w"]
+expected_keywords = ["fake", "real", "synthetic", "authentic", "manipulated", "deepfake"]
 labels_valid = any(
-    any(kw == label.lower() or kw in label.lower() for kw in expected_keywords) 
+    any(kw in label.lower() for kw in expected_keywords) 
     for label in model.config.id2label.values()
 )
 if not labels_valid:
@@ -153,10 +153,10 @@ async def analyze_image(request: Request, file: UploadFile = File(...)):
         labels = model.config.id2label
         probs_dict = {labels[i].lower(): round(probabilities[i].item() * 100, 2) for i in range(len(labels))}
 
-        # Find synthetic score matching any common fake label variant ('fake', 'deepfake', 'synthetic', or 'm')
+        # Find synthetic score matching any common fake label variant ('fake', 'deepfake', 'synthetic')
         fake_score = None
         for key, val in probs_dict.items():
-            if key == "m" or any(k in key for k in ["fake", "deepfake", "synthetic", "manipulated"]):
+            if any(k in key for k in ["fake", "deepfake", "synthetic", "manipulated"]):
                 fake_score = val
                 break
                 
