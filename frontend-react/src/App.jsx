@@ -95,7 +95,7 @@ export default function App() {
       {/* Main Workspace */}
       <main className="workspace">
         <header className="page-header">
-          <h1>Neural Inference Engine</h1>
+          <h1>DeepTrace AI</h1>
           <p>Upload an image or video file to run multimodal forensics analysis.</p>
         </header>
 
