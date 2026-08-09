@@ -1,7 +1,12 @@
-import React from 'react';
-import { Shield, Info, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Shield, Info, AlertTriangle, CheckCircle2, FileText, Download, BadgeCheck } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export default function ResultsDashboard({ resultData }) {
+  const dashboardRef = useRef(null);
+  const [isExporting, setIsExporting] = useState(false);
+
   if (!resultData) return null;
 
   const isSynthetic = resultData.is_synthetic;
@@ -39,11 +44,62 @@ export default function ResultsDashboard({ resultData }) {
   }
 
   const heatmap = resultData.visual_explainability;
+  const c2pa = meta?.c2pa_manifest;
+
+  const handleDownloadPdf = async () => {
+    if (!dashboardRef.current) return;
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(dashboardRef.current, { scale: 2, useCORS: true, backgroundColor: '#282726' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [canvas.width, canvas.height] });
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`DeepTrace_Report_${resultData.filename || 'media'}.pdf`);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      alert('Failed to generate PDF report.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
-    <section className="saas-panel animate-fade-in" style={{ marginTop: '2rem' }}>
-      <div className="results-content">
+    <section className="saas-panel animate-fade-in" style={{ marginTop: '2rem', position: 'relative' }}>
+      
+      {/* Action Bar */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <button 
+          onClick={handleDownloadPdf} 
+          disabled={isExporting}
+          className="btn-primary" 
+          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+        >
+          <Download size={16} />
+          {isExporting ? 'Generating PDF...' : 'Download PDF Report'}
+        </button>
+      </div>
+
+      <div className="results-content" ref={dashboardRef} style={{ padding: '1rem', background: 'var(--bg-panel)', borderRadius: '8px' }}>
         
+        {/* C2PA Verified Banner */}
+        {c2pa && (
+          <div style={{ padding: '1rem', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid #3b82f6', marginBottom: '1.5rem' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa', marginBottom: '0.5rem' }}>
+              <BadgeCheck size={20} />
+              Verified Content Credentials (C2PA)
+            </h2>
+            <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+              This media file contains cryptographically verified Content Credentials.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <div><strong>Issuer:</strong> {c2pa.issuer}</div>
+              <div><strong>Tool:</strong> {c2pa.claim_generator}</div>
+              <div><strong>Validation:</strong> {c2pa.validation_state}</div>
+              <div><strong>Title:</strong> {c2pa.title}</div>
+            </div>
+          </div>
+        )}
+
         {/* Simple English Verdict Summary */}
         <div style={{ padding: '1.5rem', borderRadius: '8px', background: bgColor, border: `1px solid ${borderColor}` }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: textColor, marginBottom: '0.5rem' }}>

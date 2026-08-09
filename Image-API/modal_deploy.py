@@ -14,7 +14,8 @@ image = (
         "transformers",
         "gradio",
         "spaces",
-        "slowapi"
+        "slowapi",
+        "c2pa-python"
     )
     .add_local_file("app.py", remote_path="/root/app.py")
 )

@@ -8,6 +8,7 @@ from transformers import AutoImageProcessor, AutoModelForImageClassification
 import PIL.ExifTags
 import spaces
 import logging
+import c2pa
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -65,12 +66,28 @@ def run_neural_inference(image):
     return probabilities
 
 
-def extract_metadata(image: Image.Image) -> dict:
-    """Extracts metadata and inspects for synthetic/editing signatures."""
+def extract_metadata(image: Image.Image, contents: bytes) -> dict:
+    """Extracts metadata and inspects for synthetic/editing signatures and C2PA credentials."""
     exif_data = {}
     ai_software_detected = False
     software_name = "None"
     has_metadata = False
+    c2pa_manifest = None
+
+    try:
+        reader = c2pa.Reader.try_create(stream=io.BytesIO(contents))
+        if reader:
+            manifest = reader.get_active_manifest()
+            if manifest:
+                c2pa_manifest = {
+                    "title": manifest.get("title", "Unknown"),
+                    "format": manifest.get("format", "Unknown"),
+                    "issuer": manifest.get("signature_info", {}).get("issuer", "Unknown") if manifest.get("signature_info") else "Unknown",
+                    "validation_state": reader.get_validation_state(),
+                    "claim_generator": manifest.get("claim_generator", "Unknown")
+                }
+    except Exception as e:
+        logger.warning(f"Error reading C2PA: {e}")
 
     try:
         # JPEG EXIF
@@ -104,7 +121,8 @@ def extract_metadata(image: Image.Image) -> dict:
         "editing_software_detected": ai_software_detected,
         "format": image.format,
         "dimensions": f"{image.width}x{image.height}",
-        "raw_exif_summary": dict(list(exif_data.items())[:5]) if exif_data else "No metadata found"
+        "raw_exif_summary": dict(list(exif_data.items())[:5]) if exif_data else "No metadata found",
+        "c2pa_manifest": c2pa_manifest
     }
 
 
@@ -144,7 +162,7 @@ async def analyze_image(request: Request, file: UploadFile = File(...)):
         image = Image.open(io.BytesIO(contents)).convert("RGB")
 
         # 1. Metadata Forensics
-        metadata_analysis = extract_metadata(image)
+        metadata_analysis = extract_metadata(image, contents)
 
         # 2. Model Inference via ZeroGPU
         probabilities = run_neural_inference(image)
