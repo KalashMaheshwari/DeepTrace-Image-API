@@ -13,7 +13,8 @@ image = (
         "python-multipart",
         "transformers",
         "gradio",
-        "spaces"
+        "spaces",
+        "slowapi"
     )
     .add_local_file("app.py", remote_path="/root/app.py")
 )

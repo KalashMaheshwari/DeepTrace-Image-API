@@ -18,7 +18,8 @@ image = (
         "torchvision",
         "transformers",
         "opencv-python-headless",
-        "python-multipart"
+        "python-multipart",
+        "slowapi"
     )
     # Bake the model into the container during the build phase to avoid cold starts!
     .run_commands(
