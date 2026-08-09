@@ -77,13 +77,8 @@ export default function App() {
             <img 
               src={theme === 'dark' ? '/logo-light.webp' : '/logo-dark.webp'} 
               alt="DeepTrace Logo" 
-              style={{ height: '24px', width: 'auto' }} 
+              style={{ height: '36px', width: 'auto' }} 
             />
-          </div>
-          <div className="breadcrumb">
-            <span>Nexus</span>
-            <ChevronRight size={14} className="breadcrumb-separator" />
-            <span className="breadcrumb-active">DeepTrace Console</span>
           </div>
         </div>
         <div className="nav-right">
