@@ -73,8 +73,12 @@ export default function App() {
       {/* SaaS Top Navigation */}
       <nav className="top-nav">
         <div className="nav-left">
-          <div className="nav-logo-icon">
-            <Shield size={20} color="var(--text-primary)" />
+          <div className="nav-logo-icon" style={{ display: 'flex', alignItems: 'center' }}>
+            <img 
+              src={theme === 'dark' ? '/logo-light.webp' : '/logo-dark.webp'} 
+              alt="DeepTrace Logo" 
+              style={{ height: '24px', width: 'auto' }} 
+            />
           </div>
           <div className="breadcrumb">
             <span>Nexus</span>
