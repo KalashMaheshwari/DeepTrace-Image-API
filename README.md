@@ -1,66 +1,46 @@
-# DeepTrace AI (Image API)
+# DeepTrace AI
 
-DeepTrace AI is a Multimodal Forensics & Deepfake Detection Platform API designed to detect synthetic or manipulated images. It uses a combination of advanced neural models, forensic metadata analysis, and heuristic risk engines to accurately determine if an image is authentic or AI-generated.
+DeepTrace AI is a Multimodal Forensics & Deepfake Detection Platform designed to detect synthetic or manipulated media. It uses a combination of advanced neural models, forensic metadata analysis, and heuristic risk engines to accurately determine if an image or video is authentic or AI-generated.
 
-Currently configured to run as a 100% free serverless API on **Hugging Face Spaces** using the Gradio SDK.
+Currently configured as a modern monorepo running on **Modal** for serverless GPU APIs and **Vercel** for the React frontend.
+
+## Architecture
+
+- **`Image-API/`**: FastAPI service running a SigLIP-based Vision Transformer (`Skullly/DeepFake-image-detection-ViT-384`).
+- **`Video-API/`**: FastAPI service running a VideoMAE model (`Vansh180/VideoMae-ffc23-deepfake-detector`).
+- **`frontend-react/`**: A stunning, dark-mode-first React dashboard for uploading media and visualizing the forensics reports.
 
 ## Features
 
-- **Neural Inference**: Uses a state-of-the-art vision model (`Skullly/DeepFake-image-detection-ViT-384`) to compute raw deepfake probabilities.
+- **Multimodal Inference**: Supports both Image (JPEG, PNG, WEBP) and Video (MP4, AVI, MOV) analysis.
 - **Forensic Metadata Analysis**: Extracts EXIF metadata to identify signatures of known editing software and AI generators.
 - **Dynamic Ensemble Risk Engine**: Applies heuristic risk penalties for common AI generation artifacts (missing EXIF, exact square aspect ratios).
 - **Visual Explainability**: Generates an edge-enhanced heatmap overlay of the image to highlight manipulated candidate clusters.
+- **Serverless GPU Scaling**: Deployed on Modal to ensure instant scale-out with T4 GPUs on demand.
 
-## Tech Stack
+## Deployment to Modal.com
 
-- **Backend / API**: FastAPI (Python)
-- **Deployment**: Hugging Face Spaces (Gradio SDK)
-- **Machine Learning**: PyTorch, Transformers (Hugging Face)
-- **Image Processing**: Pillow (PIL)
+This repository is optimized to be deployed to Modal.
 
-## Deployment to Hugging Face Spaces
+1. Ensure you have a Modal account and have run `modal setup`.
+2. To deploy the Image API:
+   ```bash
+   cd Image-API
+   $env:PYTHONIOENCODING="utf-8" # Windows only
+   python -m modal deploy modal_deploy.py
+   ```
+3. To deploy the Video API:
+   ```bash
+   cd Video-API
+   $env:PYTHONIOENCODING="utf-8" # Windows only
+   python -m modal deploy modal_deploy.py
+   ```
 
-This repository is optimized to be deployed as a ZeroGPU Gradio Space on Hugging Face.
+## Frontend Deployment
 
-1. Go to [Hugging Face Spaces](https://huggingface.co/spaces) and click **Create new Space**.
-2. Set a name and choose the **Gradio** Space SDK.
-3. Choose the **ZeroGPU** hardware tier (Free).
-4. Upload `app.py` and `requirements.txt` to the Files tab of your Space.
-5. Hugging Face will automatically install dependencies and launch your API!
+The frontend can be deployed easily to Vercel or any static host:
 
-## API Usage
-
-Once deployed, your FastAPI application will be accessible via your Hugging Face Space direct API URL. 
-*(For example, if your Space is `klshh/DeepTrace-Image-API`, your direct API URL is `https://klshh-deeptrace-image-api.hf.space`)*
-
-### `GET /`
-Health check endpoint to verify the system is operational.
-
-### `POST /api/v1/analyze`
-Upload an image (`multipart/form-data`) with the key `file` to run the complete forensic pipeline. 
-
-**Response Example:**
-```json
-{
-  "app_name": "DeepTrace AI",
-  "filename": "sample.jpg",
-  "verdict": "UNCERTAIN / INCONCLUSIVE",
-  "confidence_score": 52.4,
-  "is_synthetic": null,
-  "analysis_breakdown": {
-    "neural_model_probabilities": {
-      "raw_fake_probability": "52.4%",
-      "heuristic_risk_penalty": "+0.0%",
-      "final_composite_synthetic_risk": "52.4%",
-      "threshold_applied": "50.0%",
-      "all_labels": { ... }
-    },
-    "forensic_metadata": { ... }
-  },
-  "visual_explainability": {
-    "heatmap_overlay_base64": "data:image/jpeg;base64,...",
-    "heatmap_method": "edge_detection_filter",
-    "note": "This is an edge/texture map, not neural model attention."
-  }
-}
-```
+1. `cd frontend-react`
+2. `npm install`
+3. Set your environment variables in Vercel to point to your new Modal API endpoints.
+4. `npm run build`
