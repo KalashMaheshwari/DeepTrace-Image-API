@@ -11,6 +11,14 @@ from transformers import (
     VideoMAEImageProcessor,
     VideoMAEForVideoClassification,
 )
+import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from fastapi import Request
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("Video-API")
+limiter = Limiter(key_func=get_remote_address)
 
 
 # ============================================================
@@ -39,6 +47,17 @@ def load_models_if_needed():
         processor = VideoMAEImageProcessor.from_pretrained(MODEL_NAME)
         model = VideoMAEForVideoClassification.from_pretrained(MODEL_NAME)
         model.eval()
+        
+        logger.info(f"Model Labels: {model.config.id2label}")
+        expected_keywords = ["fake", "real", "synthetic", "authentic", "manipulated", "deepfake"]
+        labels_valid = any(
+            any(kw in label.lower() for kw in expected_keywords) 
+            for label in model.config.id2label.values()
+        )
+        if not labels_valid:
+            logger.error("Startup Failure: Model labels do not contain expected keywords.")
+            raise RuntimeError("Model label validation failed on startup.")
+            
         print("DeepTrace AI Video Engine Ready!")
 
 
@@ -246,32 +265,8 @@ def get_fake_probability(probabilities):
         ):
             real_probability = probability
 
-    # Fallback for binary classifier
-    if fake_probability is None:
-
-        if len(probabilities) == 2:
-
-            labels = list(
-                probabilities.keys()
-            )
-
-            # Inspect model labels and use
-            # the second class as fallback.
-            fake_probability = probabilities[
-                labels[-1]
-            ]
-
-    if real_probability is None:
-
-        if len(probabilities) == 2:
-
-            labels = list(
-                probabilities.keys()
-            )
-
-            real_probability = probabilities[
-                labels[0]
-            ]
+    if fake_probability is None or real_probability is None:
+        raise ValueError("Model label mismatch, verdict unavailable")
 
     return (
         fake_probability,
@@ -299,7 +294,9 @@ def video_health():
 # ============================================================
 
 @router.post("/analyze/video")
+@limiter.limit("5/minute")
 async def analyze_video(
+    request: Request,
     file: UploadFile = File(...)
 ):
 
@@ -335,6 +332,13 @@ async def analyze_video(
         # ----------------------------------------------------
 
         contents = await file.read()
+        
+        MAX_FILE_SIZE = 50 * 1024 * 1024
+        if len(contents) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail="File too large. Maximum size is 50MB."
+            )
 
         if not contents:
 
@@ -504,13 +508,13 @@ async def analyze_video(
         raise
 
     except Exception as e:
+        logger.error(f"Execution failed: {e}", exc_info=True)
+        if isinstance(e, ValueError) and "label mismatch" in str(e):
+            raise HTTPException(status_code=500, detail=str(e))
 
         raise HTTPException(
             status_code=500,
-            detail=(
-                "DeepTrace video analysis failed: "
-                f"{str(e)}"
-            )
+            detail="DeepTrace video analysis failed due to an internal server error."
         )
 
     finally:

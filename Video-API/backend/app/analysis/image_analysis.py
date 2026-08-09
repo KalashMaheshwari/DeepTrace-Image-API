@@ -8,6 +8,19 @@ def analyze_image(file_path: str):
     try:
         with Image.open(path) as image:
 
+            has_metadata = False
+            # JPEG EXIF
+            if hasattr(image, "getexif"):
+                raw_exif = image.getexif()
+                if raw_exif:
+                    has_metadata = True
+
+            # PNG / General Info
+            if image.info:
+                for key, value in image.info.items():
+                    if isinstance(value, (str, bytes)):
+                        has_metadata = True
+
             return {
                 "filename": path.name,
                 "format": image.format,
@@ -15,7 +28,7 @@ def analyze_image(file_path: str):
                 "height": image.height,
                 "mode": image.mode,
                 "file_size": path.stat().st_size,
-                "exif_available": bool(image.getexif()),
+                "exif_available": has_metadata,
             }
 
     except Exception as e:

@@ -10,21 +10,48 @@ export default function ResultsDashboard({ resultData }) {
   const videoInfo = resultData.analysis_breakdown?.video_information;
   const score = resultData.confidence_score;
 
+  // Determine state
+  const isUncertain = isSynthetic === null;
+  const isDanger = isSynthetic === true;
+  const isSuccess = isSynthetic === false;
+  
+  let bgColor = 'var(--success-bg)';
+  let borderColor = 'var(--success-text)';
+  let textColor = 'var(--success-text)';
+  let icon = <CheckCircle2 size={20} />;
+  let titleText = `This ${isVideo ? 'video' : 'image'} appears to be Authentic.`;
+  let descText = `We found no significant traces of AI generation or heavy digital tampering. The ${isVideo ? 'video' : 'image'}'s internal structure looks consistent with standard media.`;
+
+  if (isDanger) {
+    bgColor = 'var(--danger-bg)';
+    borderColor = 'var(--danger-text)';
+    textColor = 'var(--danger-text)';
+    icon = <AlertTriangle size={20} />;
+    titleText = `This ${isVideo ? 'video' : 'image'} appears to be AI-Generated or Manipulated.`;
+    descText = `Our analysis detected patterns consistent with artificial generation or significant digital manipulation. This could mean the ${isVideo ? 'video' : 'image'} was created by an AI tool or heavily edited.`;
+  } else if (isUncertain) {
+    bgColor = '#fff3cd'; // Bootstrap warning light
+    borderColor = '#ffc107'; // Bootstrap warning border
+    textColor = '#856404'; // Bootstrap warning text
+    icon = <AlertTriangle size={20} />;
+    titleText = `This ${isVideo ? 'video' : 'image'} is Uncertain / Inconclusive.`;
+    descText = `Our analysis found mixed signals. There may be some unusual patterns, but not enough to confidently classify it as AI-Generated or Manipulated.`;
+  }
+
+  const heatmap = resultData.visual_explainability;
 
   return (
     <section className="saas-panel animate-fade-in" style={{ marginTop: '2rem' }}>
       <div className="results-content">
         
         {/* Simple English Verdict Summary */}
-        <div style={{ padding: '1.5rem', borderRadius: '8px', background: isSynthetic ? 'var(--danger-bg)' : 'var(--success-bg)', border: `1px solid ${isSynthetic ? 'var(--danger-text)' : 'var(--success-text)'}` }}>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isSynthetic ? 'var(--danger-text)' : 'var(--success-text)', marginBottom: '0.5rem' }}>
-            {isSynthetic ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}
-            {isSynthetic ? `This ${isVideo ? 'video' : 'image'} appears to be AI-Generated or Manipulated.` : `This ${isVideo ? 'video' : 'image'} appears to be Authentic.`}
+        <div style={{ padding: '1.5rem', borderRadius: '8px', background: bgColor, border: `1px solid ${borderColor}` }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: textColor, marginBottom: '0.5rem' }}>
+            {icon}
+            {titleText}
           </h2>
           <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-            {isSynthetic 
-              ? `Our analysis detected patterns consistent with artificial generation or significant digital manipulation. This could mean the ${isVideo ? 'video' : 'image'} was created by an AI tool or heavily edited.`
-              : `We found no significant traces of AI generation or heavy digital tampering. The ${isVideo ? 'video' : 'image'}'s internal structure looks consistent with standard media.`}
+            {descText}
           </p>
         </div>
 
@@ -33,7 +60,7 @@ export default function ResultsDashboard({ resultData }) {
           <div className="score-header">
             <div>
               <div className="score-title" style={{ fontSize: '1.1rem', color: 'var(--text-primary)' }}>
-                {isSynthetic ? "Likelihood of Manipulation" : "Confidence of Authenticity"}
+                {isDanger ? "Likelihood of Manipulation" : isUncertain ? "Uncertainty Score" : "Confidence of Authenticity"}
               </div>
             </div>
             <div className="score-value">
@@ -45,7 +72,7 @@ export default function ResultsDashboard({ resultData }) {
               className="progress-fill" 
               style={{ 
                 width: `${score}%`, 
-                background: isSynthetic ? 'var(--danger-text)' : 'var(--success-text)' 
+                background: textColor 
               }} 
             />
           </div>
@@ -147,6 +174,20 @@ export default function ResultsDashboard({ resultData }) {
 
           </div>
         </div>
+        
+        {heatmap?.heatmap_overlay_base64 && (
+          <div style={{ marginTop: '2rem' }}>
+            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
+              Visual Explainability
+            </h3>
+            <img src={heatmap.heatmap_overlay_base64} alt="Analysis Overlay" style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid var(--border-color)' }} />
+            {heatmap.note && (
+              <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                <em>Note: {heatmap.note}</em>
+              </p>
+            )}
+          </div>
+        )}
         
       </div>
     </section>

@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-
-from app.analysis.video import router as video_router
-
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.analysis.video import router as video_router, limiter
 
 # ============================================================
 # FASTAPI APPLICATION
@@ -12,8 +11,11 @@ from app.analysis.video import router as video_router
 app = FastAPI(
     title="DeepTrace AI Engine",
     description="Multimodal Forensics & Deepfake Detection Platform",
-    version="2.1"
+    version="2.2"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # ============================================================
@@ -23,7 +25,6 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

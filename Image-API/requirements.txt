@@ -8,3 +8,4 @@ gradio
 transformers
 spaces
 modal
+slowapi

@@ -44,21 +44,23 @@ Upload an image (`multipart/form-data`) with the key `file` to run the complete 
 {
   "app_name": "DeepTrace AI",
   "filename": "sample.jpg",
-  "verdict": "MANIPULATED / SYNTHETIC",
-  "confidence_score": 85.4,
-  "is_synthetic": true,
+  "verdict": "UNCERTAIN / INCONCLUSIVE",
+  "confidence_score": 52.4,
+  "is_synthetic": null,
   "analysis_breakdown": {
     "neural_model_probabilities": {
-      "raw_fake_probability": "70.4%",
-      "heuristic_risk_penalty": "+15.0%",
-      "final_composite_synthetic_risk": "85.4%",
-      "threshold_applied": "30.0%",
+      "raw_fake_probability": "52.4%",
+      "heuristic_risk_penalty": "+0.0%",
+      "final_composite_synthetic_risk": "52.4%",
+      "threshold_applied": "50.0%",
       "all_labels": { ... }
     },
     "forensic_metadata": { ... }
   },
   "visual_explainability": {
-    "heatmap_overlay_base64": "data:image/jpeg;base64,..."
+    "heatmap_overlay_base64": "data:image/jpeg;base64,...",
+    "heatmap_method": "edge_detection_filter",
+    "note": "This is an edge/texture map, not neural model attention."
   }
 }
 ```
